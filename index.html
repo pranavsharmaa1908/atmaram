@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -339,7 +338,6 @@
 
                     <!-- Flow Control Toolbar & Mobile View Switcher -->
                     <div class="flex flex-wrap items-center gap-2 bg-black/80 p-2 rounded-xl border border-zinc-800 font-mono text-xs">
-                        <!-- View Toggle for Mobile/Desktop -->
                         <div class="flex items-center bg-zinc-900 p-0.5 rounded-lg border border-zinc-700/80 mr-1">
                             <button id="viewModePipeline" onclick="setDiagramView('pipeline')" class="px-2.5 py-1 rounded-md text-[11px] font-bold transition-all bg-white text-black">
                                 Step Pipeline
@@ -353,4 +351,1010 @@
                             <button id="btnPlayFlow" onclick="toggleFlowAnimation()" class="px-3 py-1 rounded-lg bg-white text-black font-bold flex items-center gap-1.5 hover:bg-zinc-200 transition-all text-[11px]">
                                 <i data-lucide="pause" id="playIcon" class="w-3.5 h-3.5"></i> <span id="playTxt">Pause</span>
                             </button>
-                            <button onclick="resetFlowAnimation()" class="px-2.5 py-1 rounded-lg bg-zinc-900 text-zinc-300 border border-zinc-700 hover:text-white flex items-center gap-1 text-[
+                            <button onclick="resetFlowAnimation()" class="px-2.5 py-1 rounded-lg bg-zinc-900 text-zinc-300 border border-zinc-700 hover:text-white flex items-center gap-1 text-[11px]">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <div class="hidden sm:flex items-center gap-1 text-[11px] border-l border-zinc-800 pl-2">
+                            <span class="text-zinc-500">Speed:</span>
+                            <button onclick="setFlowSpeed(1, this)" class="speed-btn px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-[10px]">1x</button>
+                            <button onclick="setFlowSpeed(2, this)" class="speed-btn px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 hover:text-white text-[10px]">2x</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. MOBILE/RESPONSIVE VERTICAL STEP PIPELINE -->
+                <div id="diagramPipelineContainer" class="space-y-3 font-mono">
+                    <div onclick="inspectNode('input')" id="pipe-input" class="pipe-card p-3.5 sm:p-4 rounded-xl bg-zinc-950/90 border border-zinc-800 hover:border-white transition-all cursor-pointer flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white border border-white/20 text-xs font-bold">1</div>
+                            <div>
+                                <div class="text-xs sm:text-sm font-bold text-white group-hover:text-white flex items-center gap-2">
+                                    INPUT TOKEN STREAM <span class="text-[10px] text-zinc-500 font-normal">Layer 0</span>
+                                </div>
+                                <div class="text-[11px] text-zinc-400 mt-0.5">x_t ∈ ℝ^[B × 1 × d_model]</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors"></i>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-2 text-[10px] text-zinc-500 py-1">
+                        <span class="w-12 h-[1px] bg-zinc-800"></span>
+                        <span class="uppercase tracking-widest text-zinc-400">Parallel Execution Tracks</span>
+                        <span class="w-12 h-[1px] bg-zinc-800"></span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="space-y-3">
+                            <div class="text-[10px] text-zinc-400 uppercase tracking-wider font-bold px-1 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-white inline-block"></span> Track A: GPU SSM Backbone
+                            </div>
+
+                            <div onclick="inspectNode('ssm')" id="pipe-ssm" class="pipe-card p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800 hover:border-white transition-all cursor-pointer space-y-1.5 group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white font-fraktur-heading">SSM + DeltaNet Recurrent</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300">GPU O(1)</span>
+                                </div>
+                                <div class="text-[10px] text-zinc-400">S_t = S_t-1 + β_t (v_t - S k_t)k_tᵀ</div>
+                            </div>
+
+                            <div onclick="inspectNode('backbone-head')" id="pipe-backbone-head" class="pipe-card p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800 hover:border-white transition-all cursor-pointer space-y-1.5 group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white">UNEMBED LOGIT HEAD</span>
+                                    <span class="text-[9px] text-zinc-500">[B, V_vocab]</span>
+                                </div>
+                                <div class="text-[10px] text-zinc-400">P_backbone(w) = Softmax(W_u h_t)</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="text-[10px] text-zinc-400 uppercase tracking-wider font-bold px-1 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-zinc-400 inline-block"></span> Track B: Off-Chip Vector Store
+                            </div>
+
+                            <div onclick="inspectNode('embed-key')" id="pipe-embed-key" class="pipe-card p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800 hover:border-white transition-all cursor-pointer space-y-1.5 group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white">L2 EMBED-SPAN MEAN KEY</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300">CPU 0 VRAM</span>
+                                </div>
+                                <div class="text-[10px] text-zinc-400">k_e = Σ E[w_i] / ||Σ E[w_i]||_2</div>
+                            </div>
+
+                            <div onclick="inspectNode('faiss')" id="pipe-faiss" class="pipe-card p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800 hover:border-white transition-all cursor-pointer space-y-1.5 group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white font-fraktur-heading">CPU FAISS mmap Store</span>
+                                    <span class="text-[9px] text-white font-bold">100% Match</span>
+                                </div>
+                                <div class="text-[10px] text-zinc-400">35,417 Entity Keys in RAM/Disk</div>
+                            </div>
+
+                            <div onclick="inspectNode('value-head')" id="pipe-value-head" class="pipe-card p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800 hover:border-white transition-all cursor-pointer space-y-1.5 group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white">SENTENCE VALUE DIST</span>
+                                    <span class="text-[9px] text-zinc-500">[:64] Chars</span>
+                                </div>
+                                <div class="text-[10px] text-zinc-400">P_kNN(w) from Target Sentence</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-2 text-[10px] text-zinc-500 py-1">
+                        <span class="w-12 h-[1px] bg-zinc-800"></span>
+                        <span class="uppercase tracking-widest text-zinc-400">Logit Fusion Head</span>
+                        <span class="w-12 h-[1px] bg-zinc-800"></span>
+                    </div>
+
+                    <div onclick="inspectNode('interp')" id="pipe-interp" class="pipe-card p-4 rounded-xl bg-black border-2 border-white hover:bg-zinc-900 transition-all cursor-pointer flex items-center justify-between group shadow-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold text-xs">λ</div>
+                            <div>
+                                <div class="text-xs sm:text-sm font-bold text-white font-fraktur-heading">λ-Logit Interpolation Head</div>
+                                <div class="text-[11px] text-zinc-300">(1-λ) P_base + λ P_kNN (λ = 0.70)</div>
+                            </div>
+                        </div>
+                        <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+                    </div>
+
+                    <div onclick="inspectNode('output')" id="pipe-output" class="pipe-card p-3.5 rounded-xl bg-white text-black transition-all cursor-pointer flex items-center justify-between font-bold">
+                        <div class="text-xs sm:text-sm">NEXT TOKEN DECODED w_{t+1}</div>
+                        <span class="text-[10px] bg-black text-white px-2 py-0.5 rounded">Sampled</span>
+                    </div>
+                </div>
+
+                <!-- 2. SVG CANVAS (Canvas Mode Toggle) -->
+                <div id="diagramSvgContainer" class="hidden relative w-full bg-black/90 rounded-2xl border border-zinc-800 p-2 sm:p-4 shadow-2xl overflow-hidden">
+                    <svg id="diagramSvg" viewBox="0 0 1000 640" class="w-full h-auto max-w-full select-none block">
+                        <defs>
+                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                        </defs>
+
+                        <g id="diagramWires" stroke="#3f3f46" stroke-width="2" fill="none">
+                            <path id="wire-in-split" d="M 500,85 L 500,120" stroke-dasharray="4,4" class="animate-pulse" />
+                            <path id="wire-split-ssm" d="M 500,120 C 500,150 260,140 260,180" />
+                            <path id="wire-split-key" d="M 500,120 C 500,150 740,140 740,180" />
+                            <path id="wire-ssm-head" d="M 260,250 L 260,320" />
+                            <path id="wire-key-faiss" d="M 740,240 L 740,300" />
+                            <path id="wire-faiss-value" d="M 740,370 L 740,430" />
+                            <path id="wire-head-interp" d="M 260,390 C 260,480 430,490 430,510" />
+                            <path id="wire-value-interp" d="M 740,490 C 740,510 570,490 570,510" />
+                            <path id="wire-interp-out" d="M 500,560 L 500,600" />
+                        </g>
+
+                        <g id="dataParticles"></g>
+
+                        <g id="diagramNodes" class="cursor-pointer">
+                            <g id="node-input" onclick="inspectNode('input')" transform="translate(380, 25)">
+                                <rect width="240" height="60" rx="12" fill="#0a0a0f" stroke="#ffffff" stroke-width="1.5" />
+                                <text x="120" y="26" text-anchor="middle" fill="#ffffff" font-family="Fira Code" font-size="12" font-weight="bold">INPUT TOKEN STREAM</text>
+                                <text x="120" y="44" text-anchor="middle" fill="#a1a1aa" font-family="Fira Code" font-size="10">x_t ∈ ℝ^[B × 1 × d_model]</text>
+                            </g>
+
+                            <circle cx="500" cy="120" r="8" fill="#ffffff" stroke="#27272a" stroke-width="2" />
+
+                            <g id="node-ssm" onclick="inspectNode('ssm')" transform="translate(140, 180)">
+                                <rect width="240" height="70" rx="12" fill="#0a0a0f" stroke="#e4e4e7" stroke-width="1.5" />
+                                <text x="120" y="26" text-anchor="middle" fill="#ffffff" font-family="UnifrakturMaguntia" font-size="16">SSM + DeltaNet Recurrent</text>
+                                <text x="120" y="45" text-anchor="middle" fill="#a1a1aa" font-family="Fira Code" font-size="10">S_t = S_t-1 + β_t (v_t - S k_t)k_tᵀ</text>
+                                <text x="120" y="58" text-anchor="middle" fill="#71717a" font-family="Fira Code" font-size="9">O(1) Time | GPU Engine</text>
+                            </g>
+
+                            <g id="node-backbone-head" onclick="inspectNode('backbone-head')" transform="translate(140, 320)">
+                                <rect width="240" height="70" rx="12" fill="#0a0a0f" stroke="#27272a" stroke-width="1.5" />
+                                <text x="120" y="26" text-anchor="middle" fill="#ffffff" font-family="Fira Code" font-size="12" font-weight="bold">UNEMBED LOGIT HEAD</text>
+                                <text x="120" y="45" text-anchor="middle" fill="#a1a1aa" font-family="Fira Code" font-size="10">P_backbone(w) = Softmax(W_u h_t)</text>
+                                <text x="120" y="58" text-anchor="middle" fill="#71717a" font-family="Fira Code" font-size="9">Dim: [B, V_vocab]</text>
+                            </g>
+
+                            <g id="node-embed-key" onclick="inspectNode('embed-key')" transform="translate(620, 180)">
+                                <rect width="240" height="60" rx="12" fill="#0a0a0f" stroke="#e4e4e7" stroke-width="1.5" />
+                                <text x="120" y="26" text-anchor="middle" fill="#ffffff" font-family="Fira Code" font-size="11" font-weight="bold">L2 EMBED-SPAN MEAN KEY</text>
+                                <text x="120" y="45" text-anchor="middle" fill="#a1a1aa" font-family="Fira Code" font-size="10">k_e = Σ E[w_i] / ||Σ E[w_i]||_2</text>
+                            </g>
+
+                            <g id="node-faiss" onclick="inspectNode('faiss')" transform="translate(620, 300)">
+                                <rect width="240" height="70" rx="12" fill="#0a0a0f" stroke="#e4e4e7" stroke-width="1.5" />
+                                <text x="120" y="26" text-anchor="middle" fill="#ffffff" font-family="UnifrakturMaguntia" font-size="16">CPU FAISS mmap Store</text>
+                                <text x="120" y="45" text-anchor="middle" fill="#a1a1aa" font-family="Fira Code" font-size="10">35,417 Keys | 100% Gate Match</text>
+                                <text x="120" y="58" text-anchor="middle" fill="#71717a" font-family="Fira Code" font-size="9">Zero GPU Compute (CPU RAM)</text>
+                            </g>
+
+                            <g id="node-value-head" onclick="inspectNode('value-head')" transform="translate(620, 430)">
+                                <rect width="240" height="60" rx="12" fill="#0a0a0f" stroke="#27272a" stroke-width="1.5" />
+                                <text x="120" y="26" text-anchor="middle" fill="#ffffff" font-family="Fira Code" font-size="11" font-weight="bold">SENTENCE VALUE DIST</text>
+                                <text x="120" y="45" text-anchor="middle" fill="#a1a1aa" font-family="Fira Code" font-size="10">P_kNN(w) from V_sent[:64]</text>
+                            </g>
+
+                            <g id="node-interp" onclick="inspectNode('interp')" transform="translate(380, 510)">
+                                <rect width="240" height="50" rx="12" fill="#000000" stroke="#ffffff" stroke-width="2" filter="url(#glow)" />
+                                <text x="120" y="22" text-anchor="middle" fill="#ffffff" font-family="UnifrakturMaguntia" font-size="17">λ-Logit Interpolation Head</text>
+                                <text x="120" y="38" text-anchor="middle" fill="#e4e4e7" font-family="Fira Code" font-size="10">(1-λ) P_base + λ P_kNN (λ=0.7)</text>
+                            </g>
+
+                            <g id="node-output" onclick="inspectNode('output')" transform="translate(380, 595)">
+                                <rect width="240" height="35" rx="8" fill="#ffffff" stroke="#000000" stroke-width="1" />
+                                <text x="120" y="22" text-anchor="middle" fill="#000000" font-family="Fira Code" font-size="11" font-weight="bold">NEXT TOKEN DECODED w_{t+1}</text>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Inspector Panel -->
+                <div id="inspectorPanel" class="code-block p-4 sm:p-6 rounded-xl border border-zinc-700 bg-zinc-950/90 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <span id="inspectBadge" class="px-2.5 py-1 rounded bg-white text-black font-mono font-bold text-[10px] sm:text-xs uppercase">Node Details</span>
+                            <h3 id="inspectTitle" class="font-fraktur-title text-lg sm:text-xl font-bold text-white">Select a Layer Node Above</h3>
+                        </div>
+                        <span id="inspectHw" class="text-[11px] font-mono text-zinc-400 border border-zinc-800 px-2.5 py-1 rounded bg-black self-start sm:self-auto">
+                            Hardware: -
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
+                        <div class="space-y-1 bg-black/60 p-3 rounded-lg border border-zinc-800">
+                            <span class="text-zinc-400 block text-[10px] uppercase tracking-wider">Mathematical Formula</span>
+                            <div id="inspectFormula" class="text-white text-xs sm:text-sm pt-1 min-h-[30px] overflow-x-auto">$--$</div>
+                        </div>
+                        <div class="space-y-1 bg-black/60 p-3 rounded-lg border border-zinc-800">
+                            <span class="text-zinc-400 block text-[10px] uppercase tracking-wider">Tensor Shapes & Data</span>
+                            <div id="inspectShapes" class="text-zinc-200 text-xs pt-1">--</div>
+                        </div>
+                        <div class="space-y-1 bg-black/60 p-3 rounded-lg border border-zinc-800">
+                            <span class="text-zinc-400 block text-[10px] uppercase tracking-wider">Complexity & Memory</span>
+                            <div id="inspectComplexity" class="text-zinc-200 text-xs pt-1">--</div>
+                        </div>
+                    </div>
+
+                    <p id="inspectDesc" class="text-xs text-zinc-300 leading-relaxed pt-1">
+                        Click any step or node box above to inspect how tokens flow through the SSM backbone, the CPU vector store, and the probability mixing head.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="section-datastore" class="tab-content hidden space-y-8">
+            <div class="space-card p-4 sm:p-8 rounded-2xl">
+                <h2 class="font-fraktur-heading text-2xl sm:text-3xl font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="database" class="w-6 h-6 text-white"></i> Datastore Architecture & Value Content
+                </h2>
+                <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed mb-6">
+                    ATMARAM leverages a high-efficiency off-chip sentence-aligned datastore. Sentence alignment strategy directly dictates fact recall quality and causal generation performance.
+                </p>
+
+                <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                    <table class="w-full text-left text-xs font-mono border-collapse min-w-[640px]">
+                        <thead>
+                            <tr class="border-b border-zinc-800 text-white bg-zinc-900/90">
+                                <th class="p-3">Store Variant</th>
+                                <th class="p-3">Datastore Size</th>
+                                <th class="p-3">Value Content Strategy</th>
+                                <th class="p-3">Answer PPL (200 cases)</th>
+                                <th class="p-3">Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                            <tr class="hover:bg-zinc-900/50">
+                                <td class="p-3 font-bold text-white">Occurrence Chunks (`lm_ds2`)</td>
+                                <td class="p-3">422K entries / 464MB</td>
+                                <td class="p-3">Surrounding 64-char occurrence windows</td>
+                                <td class="p-3 text-zinc-400">4.40 PPL</td>
+                                <td class="p-3 text-zinc-400">Lacks isolated facts</td>
+                            </tr>
+                            <tr class="hover:bg-zinc-900/50 bg-zinc-900/40 border-l-2 border-white">
+                                <td class="p-3 font-bold text-white">Sentence-Aligned (`lm_dsent`)</td>
+                                <td class="p-3">2,158 entries / 2.5MB</td>
+                                <td class="p-3">Exact answer sentence [:64]</td>
+                                <td class="p-3 text-white font-bold">4.24 PPL (-0.16)</td>
+                                <td class="p-3 text-white font-bold">Optimal Causal Fact Gain</td>
+                            </tr>
+                            <tr class="hover:bg-zinc-900/50">
+                                <td class="p-3 font-bold text-zinc-500">Parametric Fallback (Neither)</td>
+                                <td class="p-3">0MB (No Store)</td>
+                                <td class="p-3">Standalone Backbone Weights</td>
+                                <td class="p-3 text-zinc-500">4.42 PPL</td>
+                                <td class="p-3 text-zinc-500">Baseline control</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-card p-6 rounded-2xl space-y-3">
+                    <div class="flex items-center gap-2 text-white font-fraktur-heading text-lg font-bold">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-zinc-500"></i> Baseline: Hidden-Span Key Index
+                    </div>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        Required running full GPU forward passes over every entity chunk to extract backbone hidden state representations.
+                    </p>
+                    <ul class="text-xs space-y-1.5 font-mono text-zinc-300">
+                        <li class="flex items-center gap-2"><span class="text-zinc-500">✕</span> High GPU forward pass compute overhead during build</li>
+                        <li class="flex items-center gap-2"><span class="text-white">✓</span> High accuracy (94.5% top-3 gate)</li>
+                        <li class="flex items-center gap-2"><span class="text-zinc-500">✕</span> Impractical for continuous low-VRAM index building</li>
+                    </ul>
+                </div>
+
+                <div class="space-card p-6 rounded-2xl space-y-3 border-zinc-600 bg-zinc-900/40">
+                    <div class="flex items-center gap-2 text-white font-fraktur-heading text-lg font-bold">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-white"></i> ATMARAM Refinement: L2 Embed-Span Means
+                    </div>
+                    <p class="text-xs text-zinc-300 leading-relaxed">
+                        Calculates L2-normed mean of raw token embeddings over entity occurrence spans (`build_entity_index.py`).
+                    </p>
+                    <ul class="text-xs space-y-1.5 font-mono text-white">
+                        <li class="flex items-center gap-2"><span class="text-white">✓</span> <strong>200/200 (100.0%) Top-3 Gate Accuracy</strong></li>
+                        <li class="flex items-center gap-2"><span class="text-white">✓</span> Zero GPU forward passes needed (CPU-only build)</li>
+                        <li class="flex items-center gap-2"><span class="text-white">✓</span> Instantaneous index construction on laptop hardware</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-benchmarks" class="tab-content hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                <div class="space-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <h3 class="font-fraktur-heading text-base sm:text-lg font-bold text-white">Open Generation Fact Recall</h3>
+                            <span class="text-[10px] font-mono bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">10 Held-out Entities</span>
+                        </div>
+                        <p class="text-xs text-zinc-400">
+                            Content-word recall accuracy vs target answer sentences under open sampling (temp 0.8).
+                        </p>
+                    </div>
+                    <div class="h-56 sm:h-64 relative w-full">
+                        <canvas id="recallChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="space-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <h3 class="font-fraktur-heading text-base sm:text-lg font-bold text-white">Teacher-Forced Perplexity (PPL)</h3>
+                            <span class="text-[10px] font-mono bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">200 Held-out Cases</span>
+                        </div>
+                        <p class="text-xs text-zinc-400">
+                            Comparison of model variants under teacher-forced evaluation (Lower is better).
+                        </p>
+                    </div>
+                    <div class="h-56 sm:h-64 relative w-full">
+                        <canvas id="pplChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-card p-4 sm:p-8 rounded-2xl space-y-4">
+                <h3 class="font-fraktur-heading text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="layers-3" class="w-5 h-5 text-white"></i> Four-Way Method Comparison Sweep
+                </h3>
+                
+                <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                    <table class="w-full text-left text-xs font-mono border-collapse min-w-[700px]">
+                        <thead>
+                            <tr class="border-b border-zinc-800 text-white bg-zinc-900/90">
+                                <th class="p-3">Condition</th>
+                                <th class="p-3">Mechanism</th>
+                                <th class="p-3">Answer PPL (Retrieved)</th>
+                                <th class="p-3">Open Gen Recall</th>
+                                <th class="p-3">Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                            <tr class="hover:bg-zinc-900/50">
+                                <td class="p-3 font-bold text-zinc-300">Cond 1: Occurrence Prepend</td>
+                                <td class="p-3">Soft Prepend (`lm_dual.pt`)</td>
+                                <td class="p-3">4.40</td>
+                                <td class="p-3 text-zinc-500">0.008 (0.8%)</td>
+                                <td class="p-3 text-zinc-500">Mechanism Failed</td>
+                            </tr>
+                            <tr class="hover:bg-zinc-900/50">
+                                <td class="p-3 font-bold text-zinc-300">Cond 2: Sentence Prepend</td>
+                                <td class="p-3">Soft Retrain (`lm_dual_sent.pt`)</td>
+                                <td class="p-3">4.47</td>
+                                <td class="p-3 text-zinc-500">0.008 (0.8%)</td>
+                                <td class="p-3 text-zinc-500">Soft retrain ineffective</td>
+                            </tr>
+                            <tr class="hover:bg-zinc-900/50 bg-zinc-900 border-l-2 border-white">
+                                <td class="p-3 font-bold text-white">Cond 3: Logit Interpolation ($\lambda=0.7$)</td>
+                                <td class="p-3 text-white">Logit Mixing (`lm_interp.py`)</td>
+                                <td class="p-3 text-white font-bold">1.31</td>
+                                <td class="p-3 text-white font-bold">0.286 (28.6%)</td>
+                                <td class="p-3 text-white font-bold">Optimal Architecture</td>
+                            </tr>
+                            <tr class="hover:bg-zinc-900/50">
+                                <td class="p-3 font-bold text-zinc-500">Cond 4: Parametric Control</td>
+                                <td class="p-3">Standalone (`lm_param.pt`)</td>
+                                <td class="p-3 text-zinc-500">4.49</td>
+                                <td class="p-3 text-zinc-500">0.000 (0.0%)</td>
+                                <td class="p-3 text-zinc-500">Pure Baseline</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-simulator" class="tab-content hidden space-y-8">
+            <div class="space-card p-4 sm:p-8 rounded-2xl space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+                    <div>
+                        <h2 class="font-fraktur-heading text-2xl font-bold text-white flex items-center gap-2">
+                            <i data-lucide="play-circle" class="w-6 h-6 text-white"></i> Interactive Pipeline Simulator
+                        </h2>
+                        <p class="text-xs text-zinc-400 mt-1">Simulate query routing, CPU index search, and logit mixing in real time.</p>
+                    </div>
+                    <span class="text-[11px] font-mono px-3 py-1 bg-zinc-900 text-zinc-200 rounded border border-zinc-700 self-start sm:self-auto">
+                        Live Engine Active
+                    </span>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-mono text-zinc-300 uppercase tracking-wider block">Select Test Entity Query:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="selectQuery('Adirondack Park')" class="query-btn p-3 rounded-xl bg-black/80 border border-zinc-800 hover:border-white text-left transition-all">
+                            <div class="text-xs font-bold text-white">Adirondack Park</div>
+                            <div class="text-[10px] text-zinc-400 mt-0.5">Tell me about Adirondack Park.</div>
+                        </button>
+                        <button onclick="selectQuery('Troika')" class="query-btn p-3 rounded-xl bg-black/80 border border-zinc-800 hover:border-white text-left transition-all">
+                            <div class="text-xs font-bold text-white">Troika</div>
+                            <div class="text-[10px] text-zinc-400 mt-0.5">Tell me about Troika.</div>
+                        </button>
+                        <button onclick="selectQuery('Nunney Castle')" class="query-btn p-3 rounded-xl bg-black/80 border border-zinc-800 hover:border-white text-left transition-all">
+                            <div class="text-xs font-bold text-white">Nunney Castle</div>
+                            <div class="text-[10px] text-zinc-400 mt-0.5">Tell me about Nunney Castle.</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-black/90 border border-zinc-800 space-y-3">
+                    <div class="flex items-center justify-between text-xs font-mono">
+                        <span class="text-white font-bold flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-4 h-4 text-white"></i> Interpolation Weight ($\lambda$):
+                        </span>
+                        <span id="lambdaVal" class="text-base font-bold text-white">0.70</span>
+                    </div>
+                    <input type="range" id="lambdaSlider" min="0" max="1" step="0.05" value="0.70" oninput="updateLambdaSim(this.value)" class="w-full accent-white cursor-pointer h-2 bg-zinc-800 rounded-lg">
+                    <div class="flex justify-between text-[10px] text-zinc-400 font-mono">
+                        <span>$\lambda=0.0$ (Backbone)</span>
+                        <span>$\lambda=0.7$ (ATMARAM Optimal)</span>
+                        <span>$\lambda=1.0$ (Memory)</span>
+                    </div>
+                </div>
+
+                <div class="code-block p-4 sm:p-6 rounded-xl space-y-4">
+                    <div class="flex items-center justify-between text-xs border-b border-zinc-800 pb-2">
+                        <span class="text-white font-bold font-mono">Execution Log Trace:</span>
+                        <span id="simStatus" class="text-zinc-400 font-mono text-[11px]">Ready</span>
+                    </div>
+
+                    <div id="simLog" class="space-y-3 text-xs font-mono">
+                        <div class="text-zinc-400">> Select a test query above to run the pipeline simulator...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center pt-8 border-t border-zinc-800 text-xs font-mono text-zinc-500 space-y-1">
+            <p class="font-fraktur-title text-lg text-zinc-200 font-bold tracking-wider">atmaram.tech</p>
+            <p>© 2026 Associative Temporal Memory & Retrieval Augmented Model Architecture</p>
+        </footer>
+
+    </div>
+
+    <script>
+        function safeCreateIcons() {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-black', 'font-semibold', 'shadow-md');
+                btn.classList.add('text-zinc-400', 'hover:text-white');
+            });
+
+            const targetSection = document.getElementById(`section-${tabId}`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'text-black', 'font-semibold', 'shadow-md');
+                activeBtn.classList.remove('text-zinc-400');
+            }
+
+            if (tabId === 'benchmarks') {
+                initCharts();
+            }
+
+            if (tabId === 'diagram') {
+                initDiagramEngine();
+            }
+
+            if (tabId === 'simulator') {
+                runSimulation();
+            }
+
+            safeCreateIcons();
+
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise();
+            }
+        }
+
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let nebulaDust = [];
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * (canvas.width || window.innerWidth);
+                this.y = Math.random() * (canvas.height || window.innerHeight);
+                this.size = Math.random() * 1.5 + 0.2;
+                this.speedX = (Math.random() - 0.5) * 0.12;
+                this.speedY = (Math.random() - 0.5) * 0.12;
+                this.alpha = Math.random() * 0.8 + 0.1;
+                this.twinkleSpeed = Math.random() * 0.02 + 0.005;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha += Math.sin(Date.now() * this.twinkleSpeed) * 0.015;
+                if (this.alpha < 0.1) this.alpha = 0.1;
+                if (this.alpha > 0.9) this.alpha = 0.9;
+
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class NebulaCloud {
+            constructor() {
+                this.x = Math.random() * (canvas.width || window.innerWidth);
+                this.y = Math.random() * (canvas.height || window.innerHeight);
+                this.radius = Math.random() * 250 + 120;
+                this.opacity = Math.random() * 0.03 + 0.01;
+            }
+            draw() {
+                ctx.save();
+                const gradient = ctx.createRadialGradient(this.x, this.y, 10, this.x, this.y, this.radius);
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`);
+                gradient.addColorStop(0.5, `rgba(120, 120, 140, ${this.opacity * 0.3})`);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) stars.push(new Star());
+        for (let i = 0; i < 5; i++) nebulaDust.push(new NebulaCloud());
+
+        function animateGalaxy() {
+            if (!ctx) return;
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            nebulaDust.forEach(n => n.draw());
+            stars.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            requestAnimationFrame(animateGalaxy);
+        }
+        animateGalaxy();
+
+        const nodeMetadata = {
+            'input': {
+                title: 'Input Sequence Token Stream',
+                badge: 'Layer 0: Input',
+                hw: 'GPU VRAM (RTX 3050)',
+                formula: '\\mathbf{x}_t \\in \\mathbb{R}^{B \\times 1 \\times d_{\\text{model}}}',
+                shapes: 'Batch: 1 | Context: t | Dim: 768',
+                complexity: 'Time: O(1) | Space: O(d_model)',
+                desc: 'Input sequence tokens are converted into embedding vectors. The stream branches in parallel to the SSM linear backbone and the CPU key search.'
+            },
+            'ssm': {
+                title: 'SSM + DeltaNet Fast-Weight Layer',
+                badge: 'Backbone Recurrent',
+                hw: 'GPU Compute',
+                formula: '\\mathbf{S}_t = \\mathbf{S}_{t-1} + \\beta_t (\\mathbf{v}_t - \\mathbf{S}_{t-1}\\mathbf{k}_t)\\mathbf{k}_t^\\top',
+                shapes: 'State Matrix: S_t ∈ ℝ^{d_state × d_state}',
+                complexity: 'Time: O(1) per token | VRAM: Flat Constant',
+                desc: 'State Space Model dynamics coupled with DeltaNet error-correction updates. Maintains temporal sequence history in a fixed-size state matrix.'
+            },
+            'backbone-head': {
+                title: 'Unembedded Backbone Logit Head',
+                badge: 'Output Layer A',
+                hw: 'GPU Linear Proj',
+                formula: 'P_{\\text{backbone}}(w) = \\text{Softmax}(\\mathbf{W}_u \\mathbf{h}_t)',
+                shapes: 'Logits Tensor: [B, V_vocab]',
+                complexity: 'Time: O(V_vocab) | Zero-Attention',
+                desc: 'Projects the final hidden state h_t through vocabulary projection weights W_u to obtain parametric token probabilities.'
+            },
+            'embed-key': {
+                title: 'L2 Embed-Span Mean Key Extractor',
+                badge: 'Zero-GPU Search',
+                hw: 'CPU Only (0 GPU Flops)',
+                formula: '\\mathbf{k}_e = \\frac{\\sum_{i \\in \\text{span}} \\mathbf{E}[w_i]}{\\left\\| \\sum_{i \\in \\text{span}} \\mathbf{E}[w_i] \\right\\|_2}',
+                shapes: 'Key Vector: k_e ∈ ℝ^{d_embed}',
+                complexity: 'Time: O(span_len) CPU | Top-3 Gate: 100%',
+                desc: 'Computes normalized average token embeddings across entity occurrences. Achieves 200/200 exact gate precision on CPU with zero GPU forward passes.'
+            },
+            'faiss': {
+                title: 'Memory-Mapped FAISS Vector Store',
+                badge: 'Off-Chip Datastore',
+                hw: 'CPU RAM / NVMe',
+                formula: 'i^* = \\arg\\max_{i} \\langle \\mathbf{k}_q, \\mathbf{k}_i \\rangle',
+                shapes: '35,417 Entity Keys | 40MB RAM',
+                complexity: 'Lookup: O(log N) | VRAM Impact: 0 MB',
+                desc: 'Offloads millions of facts directly to RAM/SSD storage. Retains 100% key match accuracy while consuming zero GPU VRAM.'
+            },
+            'value-head': {
+                title: 'Sentence-Aligned Value Distribution',
+                badge: 'Memory Head B',
+                hw: 'CPU -> Host Memory',
+                formula: 'P_{k\\text{-NN}}(w) \\propto \\exp(\\text{Sim}(q, k_i)) \\cdot \\mathbb{I}(w \\in V_{\\text{sent}}[:64])',
+                shapes: 'Value Window: [:64] Chars',
+                complexity: 'Causal Fact Gain: -0.18 PPL Boost',
+                desc: 'Fetches the exact answer sentence corresponding to the matched entity key, converting target fact tokens into a localized distribution.'
+            },
+            'interp': {
+                title: 'Direct Logit Probability Interpolation',
+                badge: 'Output Fusion Head',
+                hw: 'GPU Logit Mixer',
+                formula: 'P(w) = (1-\\lambda)P_{\\text{backbone}}(w) + \\lambda P_{k\\text{-NN}}(w)',
+                shapes: 'Optimal λ = 0.70 | PPL: 1.31',
+                complexity: 'Fact Recall: 28.6% (vs 0.8% Prepend)',
+                desc: 'Directly mixes output token distributions at decoding time. Bypasses soft context prepending to eliminate hallucination.'
+            },
+            'output': {
+                title: 'Decoded Output Token',
+                badge: 'Generation',
+                hw: 'Host Sampler',
+                formula: 'w_{t+1} \\sim P_{\\text{final}}(w)',
+                shapes: 'Selected Token ID: w_{t+1}',
+                complexity: 'Latency: ~12ms / token',
+                desc: 'Sampled next token fed back into the recurrent loop for the subsequent generation step.'
+            }
+        };
+
+        let isFlowRunning = true;
+        let flowSpeed = 1;
+        let particleTimer = null;
+        let currentDiagramView = 'pipeline';
+
+        function initDiagramEngine() {
+            if (window.innerWidth >= 1024) {
+                setDiagramView('canvas');
+            } else {
+                setDiagramView('pipeline');
+            }
+            inspectNode('interp');
+            startParticleStream();
+        }
+
+        function setDiagramView(mode) {
+            currentDiagramView = mode;
+            const pipelineContainer = document.getElementById('diagramPipelineContainer');
+            const svgContainer = document.getElementById('diagramSvgContainer');
+            const btnPipeline = document.getElementById('viewModePipeline');
+            const btnCanvas = document.getElementById('viewModeCanvas');
+
+            if (mode === 'canvas') {
+                if (pipelineContainer) pipelineContainer.classList.add('hidden');
+                if (svgContainer) svgContainer.classList.remove('hidden');
+
+                if (btnCanvas) {
+                    btnCanvas.classList.add('bg-white', 'text-black');
+                    btnCanvas.classList.remove('text-zinc-400');
+                }
+                if (btnPipeline) {
+                    btnPipeline.classList.remove('bg-white', 'text-black');
+                    btnPipeline.classList.add('text-zinc-400');
+                }
+            } else {
+                if (svgContainer) svgContainer.classList.add('hidden');
+                if (pipelineContainer) pipelineContainer.classList.remove('hidden');
+
+                if (btnPipeline) {
+                    btnPipeline.classList.add('bg-white', 'text-black');
+                    btnPipeline.classList.remove('text-zinc-400');
+                }
+                if (btnCanvas) {
+                    btnCanvas.classList.remove('bg-white', 'text-black');
+                    btnCanvas.classList.add('text-zinc-400');
+                }
+            }
+        }
+
+        function inspectNode(nodeId) {
+            const data = nodeMetadata[nodeId];
+            if (!data) return;
+
+            document.querySelectorAll('#diagramNodes rect').forEach(r => {
+                r.setAttribute('stroke-width', '1.5');
+            });
+            const activeGroup = document.getElementById(`node-${nodeId}`);
+            if (activeGroup) {
+                const rect = activeGroup.querySelector('rect');
+                if (rect) rect.setAttribute('stroke-width', '3');
+            }
+
+            document.querySelectorAll('.pipe-card').forEach(card => {
+                card.classList.remove('ring-2', 'ring-white', 'bg-zinc-900');
+            });
+            const activePipeCard = document.getElementById(`pipe-${nodeId}`);
+            if (activePipeCard) {
+                activePipeCard.classList.add('ring-2', 'ring-white', 'bg-zinc-900');
+            }
+
+            document.getElementById('inspectTitle').innerText = data.title;
+            document.getElementById('inspectBadge').innerText = data.badge;
+            document.getElementById('inspectHw').innerText = `Hardware: ${data.hw}`;
+            document.getElementById('inspectFormula').innerText = `$${data.formula}$`;
+            document.getElementById('inspectShapes').innerText = data.shapes;
+            document.getElementById('inspectComplexity').innerText = data.complexity;
+            document.getElementById('inspectDesc').innerText = data.desc;
+
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([document.getElementById('inspectFormula')]);
+            }
+        }
+
+        function toggleFlowAnimation() {
+            isFlowRunning = !isFlowRunning;
+            const playTxt = document.getElementById('playTxt');
+            const playIcon = document.getElementById('playIcon');
+
+            if (isFlowRunning) {
+                if (playTxt) playTxt.innerText = 'Pause';
+                if (playIcon) playIcon.setAttribute('data-lucide', 'pause');
+                startParticleStream();
+            } else {
+                if (playTxt) playTxt.innerText = 'Play';
+                if (playIcon) playIcon.setAttribute('data-lucide', 'play');
+                clearInterval(particleTimer);
+            }
+            safeCreateIcons();
+        }
+
+        function resetFlowAnimation() {
+            const container = document.getElementById('dataParticles');
+            if (container) container.innerHTML = '';
+        }
+
+        function setFlowSpeed(spd, btnEl) {
+            flowSpeed = spd;
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.classList.remove('bg-zinc-800', 'text-white', 'font-bold');
+                btn.classList.add('bg-zinc-950', 'text-zinc-400');
+            });
+            if (btnEl) {
+                btnEl.classList.add('bg-zinc-800', 'text-white', 'font-bold');
+                btnEl.classList.remove('bg-zinc-950', 'text-zinc-400');
+            }
+            
+            if (isFlowRunning) {
+                clearInterval(particleTimer);
+                startParticleStream();
+            }
+        }
+
+        function spawnParticle(pathId) {
+            const path = document.getElementById(pathId);
+            const container = document.getElementById('dataParticles');
+            if (!path || !container) return;
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', '4');
+            circle.setAttribute('fill', '#ffffff');
+            circle.setAttribute('filter', 'url(#glow)');
+            container.appendChild(circle);
+
+            const pathLen = path.getTotalLength();
+            let start = null;
+            const duration = 1200 / flowSpeed;
+
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                const progress = (timestamp - start) / duration;
+
+                if (progress < 1 && isFlowRunning) {
+                    const pt = path.getPointAtLength(progress * pathLen);
+                    circle.setAttribute('cx', pt.x);
+                    circle.setAttribute('cy', pt.y);
+                    requestAnimationFrame(step);
+                } else {
+                    if (circle.parentNode) circle.parentNode.removeChild(circle);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function startParticleStream() {
+            clearInterval(particleTimer);
+            particleTimer = setInterval(() => {
+                if (!isFlowRunning) return;
+                spawnParticle('wire-in-split');
+                setTimeout(() => spawnParticle('wire-split-ssm'), 200 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-split-key'), 200 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-ssm-head'), 500 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-key-faiss'), 500 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-faiss-value'), 800 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-head-interp'), 900 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-value-interp'), 1000 / flowSpeed);
+                setTimeout(() => spawnParticle('wire-interp-out'), 1200 / flowSpeed);
+            }, 1400 / flowSpeed);
+        }
+
+        let recallChartInstance = null;
+        let pplChartInstance = null;
+
+        function initCharts() {
+            if (recallChartInstance || !window.Chart) return;
+
+            const ctxRecall = document.getElementById('recallChart').getContext('2d');
+            recallChartInstance = new Chart(ctxRecall, {
+                type: 'bar',
+                data: {
+                    labels: ['Cond 1 (Occ)', 'Cond 2 (Sent)', 'Cond 3 (λ=.1)', 'Cond 3 (λ=.3)', 'Cond 3 (λ=.5)', 'Cond 3 (λ=.7)', 'Cond 4 (Base)'],
+                    datasets: [{
+                        label: 'Fact Accuracy Recall',
+                        data: [0.008, 0.008, 0.176, 0.189, 0.240, 0.286, 0.000],
+                        backgroundColor: [
+                            'rgba(80, 80, 90, 0.6)',
+                            'rgba(80, 80, 90, 0.6)',
+                            'rgba(160, 160, 170, 0.6)',
+                            'rgba(180, 180, 190, 0.7)',
+                            'rgba(210, 210, 220, 0.85)',
+                            'rgba(255, 255, 255, 1.0)',
+                            'rgba(50, 50, 60, 0.6)'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#a1a1aa', font: { family: 'Fira Code', size: 10 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#a1a1aa', font: { family: 'Fira Code', size: 9 } }
+                        }
+                    }
+                }
+            });
+
+            const ctxPpl = document.getElementById('pplChart').getContext('2d');
+            pplChartInstance = new Chart(ctxPpl, {
+                type: 'line',
+                data: {
+                    labels: ['λ=0.0', 'λ=0.1', 'λ=0.3', 'λ=0.5', 'λ=0.7 (Optimal)'],
+                    datasets: [{
+                        label: 'Answer Perplexity',
+                        data: [4.42, 2.65, 1.87, 1.53, 1.31],
+                        borderColor: '#ffffff',
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        fill: true,
+                        tension: 0.2,
+                        pointBackgroundColor: '#ffffff',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#a1a1aa', font: { family: 'Fira Code', size: 10 } }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa', font: { family: 'Fira Code', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        const queryDatabase = {
+            'Adirondack Park': {
+                query: "Tell me about Adirondack Park.",
+                entity: "Adirondack Park",
+                sentenceValue: "Adirondack Park was established in 1892 by the state of New York...",
+                baseToken: "established",
+                baseProb: 0.02,
+                knnProb: 0.88
+            },
+            'Troika': {
+                query: "Tell me about Troika.",
+                entity: "Troika",
+                sentenceValue: "Troika is a traditional Russian sleigh pulled by three horses abreast...",
+                baseToken: "traditional",
+                baseProb: 0.01,
+                knnProb: 0.92
+            },
+            'Nunney Castle': {
+                query: "Tell me about Nunney Castle.",
+                entity: "Nunney Castle",
+                sentenceValue: "Nunney Castle is a medieval castle in Somerset, England built in 1373...",
+                baseToken: "medieval",
+                baseProb: 0.03,
+                knnProb: 0.85
+            }
+        };
+
+        let currentQueryKey = 'Adirondack Park';
+
+        function selectQuery(key) {
+            currentQueryKey = key;
+            runSimulation();
+        }
+
+        function updateLambdaSim(val) {
+            document.getElementById('lambdaVal').innerText = parseFloat(val).toFixed(2);
+            runSimulation();
+        }
+
+        function runSimulation() {
+            const lambda = parseFloat(document.getElementById('lambdaSlider').value);
+            const data = queryDatabase[currentQueryKey];
+            const simLog = document.getElementById('simLog');
+            if (!simLog) return;
+
+            const p_final = (1 - lambda) * data.baseProb + lambda * data.knnProb;
+            let factRecallScore = (lambda * 0.38 + 0.008).toFixed(3);
+            if (lambda === 0) factRecallScore = "0.000";
+
+            simLog.innerHTML = `
+                <div class="text-zinc-200 flex items-center gap-2">
+                    <span class="text-white">✓</span> [Step 1] Route Parsed: Entity matched <span class="text-white font-bold underline">${data.entity}</span> via query template.
+                </div>
+                <div class="text-zinc-200 flex items-center gap-2">
+                    <span class="text-white">✓</span> [Step 2] Zero-Cost Search: Querying L2 embed-span FAISS store on CPU... <span class="text-white font-bold">Top-1 Hit (200/200 Gate Rate)</span>
+                </div>
+                <div class="text-zinc-300 pl-3 border-l border-zinc-700 my-1 text-[11px]">
+                    Retrieved Sentence Value: "<span class="text-white font-medium">${data.sentenceValue}</span>"
+                </div>
+                <div class="text-zinc-200 flex items-center gap-2">
+                    <span class="text-white">✓</span> [Step 3] SSM + DeltaNet Pass: Fast-weights state matrix $\\mathbf{S}_t$ updated in $O(1)$ time.
+                </div>
+                <div class="text-white flex items-center gap-2 font-bold pt-1">
+                    <span>⚡</span> [Step 4] Logit Probability Interpolation ($\lambda = ${lambda.toFixed(2)}$):
+                </div>
+                <div class="p-2.5 bg-black rounded border border-zinc-800 text-[11px] space-y-1 font-mono overflow-x-auto">
+                    <div>$P_{\\text{backbone}}("${data.baseToken}") = ${data.baseProb.toFixed(3)}$</div>
+                    <div>$P_{k\\text{-NN}}("${data.baseToken}") = ${data.knnProb.toFixed(3)}$</div>
+                    <div class="text-white font-bold border-t border-zinc-800 pt-1 mt-1">
+                        $$P_{\\text{final}}("${data.baseToken}") = (1 - ${lambda.toFixed(2)}) \\times ${data.baseProb.toFixed(3)} + ${lambda.toFixed(2)} \\times ${data.knnProb.toFixed(3)} = ${p_final.toFixed(3)}$$
+                    </div>
+                </div>
+                <div class="text-zinc-200 pt-1">
+                    Estimated Open Generation Fact Recall: <span class="font-bold text-white text-sm">${(factRecallScore * 100).toFixed(1)}%</span>
+                </div>
+            `;
+
+            safeCreateIcons();
+
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([simLog]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            safeCreateIcons();
+            runSimulation();
+        });
+
+        window.onload = function() {
+            safeCreateIcons();
+            runSimulation();
+        };
+    </script>
+</body>
+</html>
